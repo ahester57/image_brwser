@@ -7,16 +7,31 @@
 #include <iostream>
 #include <random>
 
+void draw_circle(cv::Mat, int rows, int cols, int radius);
+int clr();
 
 int main(int argc, char* argv)
 {
 	std::cout << argc << std::endl;
 	srand(time(NULL));
-	cv::Mat image = cv::Mat::zeros(299, 599, CV_8UC3);
+	cv::Mat image = cv::Mat::zeros(1299, 1599, CV_8UC3);
 	while (char key_pressed = (cv::waitKey(0) & 255) != 26+1) {
-		cv::circle(image, cv::Point(250, 150), 130, cv::Scalar(rand() % 256, rand() % 256, rand() % 256), -100);
-		cv::circle(image, cv::Point(350, 150), 103, cv::Scalar(rand() % 256, rand() % 256, rand() % 256), -100);
+		draw_circle(image, 234, 12, 654);
+
+		draw_circle(image, 351, 151, 143);
+		draw_circle(image, 851, 341, 344);
+
 		cv::imshow("Display Window", image);
 	}
 	return 0;
+}
+
+void draw_circle(cv::Mat image, int r, int c, int radius)
+{
+	cv::circle(image, cv::Point(r, c), radius, cv::Scalar(clr(), clr(), clr()), -100);
+}
+
+int clr()
+{
+	return rand() % 256;
 }
