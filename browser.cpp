@@ -12,6 +12,7 @@
 #include <dirent.h>
 
 void open_dir(const char* dir_string);
+void open_dir(const char* dir_string, std::string line_prefix);
 int is_directory(const struct dirent* drnt);
 
 
@@ -60,6 +61,12 @@ main(int argc, char** argv)
 void
 open_dir(const char* dir_string)
 {
+    open_dir(dir_string, " \n");
+}
+
+void
+open_dir(const char* dir_string, const std::string line_prefix)
+{
     DIR *dr;
     try {
         dr = opendir(dir_string); //open all directory
@@ -74,9 +81,16 @@ open_dir(const char* dir_string)
     bool is_dir = false;
     struct dirent *drnt;
     while ((drnt = readdir(dr)) != NULL) {
+        if (strcmp(drnt->d_name, ".") == 0 || strcmp(drnt->d_name, "..") == 0) {
+            continue;
+        }
         // check if is a directory
         is_dir = is_directory(drnt);
-        std::cout << " \n" << drnt->d_name << is_dir; //print all directory name
+        std::cout << line_prefix << drnt->d_name << is_dir; //print all directory name
+        if (is_dir) {
+            // open next directory
+            open_dir(drnt->d_name, line_prefix + "\t");
+        }
     }
     closedir(dr); //close the directory
 }
