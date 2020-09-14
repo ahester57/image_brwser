@@ -6,9 +6,11 @@
 #include <opencv2/imgproc.hpp>
 #include <iostream>
 #include <random>
+#include <dirent.h>
 
 void draw_circle(cv::Mat, int rows, int cols, int radius);
 int clr();
+void open_dir();
 
 int main(int argc, char** argv)
 {
@@ -23,6 +25,7 @@ int main(int argc, char** argv)
 
 		cv::imshow("Image Browser", image);
 	}
+    open_dir();
 	return 0;
 }
 
@@ -34,4 +37,17 @@ void draw_circle(cv::Mat image, int r, int c, int radius)
 int clr()
 {
 	return rand() % 256;
+}
+
+void open_dir()
+{
+    DIR *dr;
+    struct dirent *en;
+    dr = opendir("."); //open all directory
+    if (dr) {
+        while ((en = readdir(dr)) != NULL) {
+            std::cout<<" \n"<<en->d_name; //print all directory name
+        }
+        closedir(dr); //close all directory
+    }
 }
