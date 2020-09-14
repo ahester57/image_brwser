@@ -1,0 +1,15 @@
+{
+    "configurations": [
+        {
+            "includePath": [
+                "C:/dev/OpenCV-MinGW-Build-OpenCV-4.1.1-x64/include"
+            ],
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "C:/dev/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0/mingw64/bin/g++.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "name": "opencv"
+        }
+    ],
+    "version": 4
+}

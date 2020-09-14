@@ -1,0 +1,36 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+        {
+            "type": "shell",
+            "label": "C/C++: cl.exe build active file",
+            "command": "g++.exe",
+            "args": [
+                "-g", "${file}", "-o", "${fileDirname}/${fileBasenameNoExtension}.exe",
+                "-I","C:/dev/OpenCV-MinGW-Build-OpenCV-4.1.1-x64/include",
+                "-L","C:/dev/OpenCV-MinGW-Build-OpenCV-4.1.1-x64/x64/mingw/bin",
+                // "-llibopencv_calib3d411",
+                "-llibopencv_core411",
+                // "-llibopencv_dnn411",
+                // "-llibopencv_features2d411",
+                // "-llibopencv_flann411",
+                "-llibopencv_highgui411",
+                "-llibopencv_imgcodecs411",
+                "-llibopencv_imgproc411"
+                // "-llibopencv_ml411",
+                // "-llibopencv_objdetect411",
+                // "-llibopencv_photo411",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

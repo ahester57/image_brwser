@@ -10,7 +10,7 @@
 void draw_circle(cv::Mat, int rows, int cols, int radius);
 int clr();
 
-int main(int argc, char* argv)
+int main(int argc, char** argv)
 {
 	std::cout << argc << std::endl;
 	srand(time(NULL));
@@ -21,7 +21,7 @@ int main(int argc, char* argv)
 		draw_circle(image, 351, 151, 143);
 		draw_circle(image, 851, 341, 344);
 
-		cv::imshow("Display Window", image);
+		cv::imshow("Image Browser", image);
 	}
 	return 0;
 }
