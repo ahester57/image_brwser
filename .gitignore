@@ -5,3 +5,4 @@ x64/
 *.vcxproj.*
 *.sln
 *.exe
+.vscode/settings.json
