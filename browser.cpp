@@ -11,13 +11,34 @@
 #include <random>
 #include <dirent.h>
 
+
+int parse_arguments(const int argc, const char** argv, std::string* input_dir_path, uint* rows, uint* cols);
 void open_dir(const char* dir_string);
-void open_dir(const char* dir_string, std::string line_prefix);
+void open_dir(const char* dir_string, const std::string line_prefix);
 int is_directory(const struct dirent* drnt);
 
 
 int
-main(int argc, char** argv)
+main(int argc, const char** argv)
+{
+    uint rows;
+    uint cols;
+    std::string input_dir_path;
+
+    int parse_result = parse_arguments(argc, argv, &input_dir_path, &rows, &cols);
+
+    if (parse_result == 1) return 0;
+    if (parse_result == -1) return -1;
+
+	std::cout << input_dir_path << std::endl;
+
+    open_dir(input_dir_path.c_str());
+	return 0;
+}
+
+
+int
+parse_arguments(int argc, const char** argv, std::string* input_dir_path, uint* rows, uint* cols)
 {
     cv::String keys =
         "{@directory  |<none>| input directory}"             // input directory is the first argument (positional)
@@ -26,43 +47,41 @@ main(int argc, char** argv)
         "{help h      |      | show help message}";          // optional, show help optional
 
     cv::CommandLineParser parser(argc, argv, keys);
+
     if (parser.has("h")) {
         parser.printMessage();
-        return 0;
+        return 1;
     }
+
+    try {
+        *input_dir_path = (std::string) parser.get<std::string>(0).c_str();
+    } catch(...) {
+        std::cerr << "Failed to parse arguments!:" << std::endl;
+        return -1;
+    }
+
+    *rows = (uint) parser.get<uint>("r") ? parser.get<uint>("r") : 1080;
+    *cols = (uint) parser.get<uint>("c") ? parser.get<uint>("c") : 1920;
 
     if (!parser.check()) {
         parser.printErrors();
         return -1;
     }
 
-    const char* input_dir_path;
-    try {
-        input_dir_path = parser.get<std::string>(0).c_str();
-    } catch(...) {
-        std::cerr << "Failed to parse arguments!:" << std::endl;
-        return -1;
-    }
-
-    uint rows = parser.get<int>("r") ? parser.get<int>("r") : 1080;
-    uint cols = parser.get<int>("c") ? parser.get<int>("c") : 1920;
-
-    if (rows > 1080 || cols > 1920) {
+    if (*rows > 1080 || *cols > 1920) {
         std::cerr << "Dimensions too large. Max 1920x1080" << std::endl;
         return -1;
     }
-
-	std::cout << input_dir_path << rows << cols << std::endl;
-
-    open_dir(input_dir_path);
-	return 0;
+    return 0;
 }
+
 
 void
 open_dir(const char* dir_string)
 {
     open_dir(dir_string, " \n");
 }
+
 
 void
 open_dir(const char* dir_string, const std::string line_prefix)
@@ -94,6 +113,7 @@ open_dir(const char* dir_string, const std::string line_prefix)
     }
     closedir(dr); //close the directory
 }
+
 
 int
 is_directory(const struct dirent* drnt)
