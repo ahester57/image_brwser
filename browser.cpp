@@ -1,5 +1,5 @@
 // assignment1.cpp : This file contains the 'main' function. Program execution begins and ends there.
-// Austin Hester CS542o sept 2o2o
+// Austin Hester CS542o sept 2020
 // g++.exe (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 8.1.0
 
 #include <opencv2/core/core.hpp>
@@ -8,9 +8,7 @@
 
 #include <sys/stat.h>
 #include <iostream>
-#include <random>
 #include <dirent.h>
-
 
 void display_images(std::vector<std::string> file_paths, uint rows, uint cols);
 int parse_arguments(const int argc, const char** argv, std::string* input_dir_path, uint* rows, uint* cols);
@@ -27,8 +25,7 @@ main(int argc, const char** argv)
     std::string input_dir_path;
 
     int parse_result = parse_arguments(argc, argv, &input_dir_path, &rows, &cols);
-    if (parse_result == 1) return 0;
-    if (parse_result == -1) return -1;
+    if (parse_result != 1) return parse_result;
 
 	std::cout << "Selected input directory:\t" << input_dir_path << std::endl;
 
@@ -42,6 +39,7 @@ main(int argc, const char** argv)
 void
 display_images(std::vector<std::string> file_paths, uint rows, uint cols)
 {
+    if (file_paths.size() == 0) return;
     std::vector<std::string>::iterator it = file_paths.begin();
     while (true) {
         std::cout << std::endl << "File info:" << std::endl;
@@ -55,17 +53,21 @@ display_images(std::vector<std::string> file_paths, uint rows, uint cols)
             }
             std::cout << "Image size is:\t\t\t" << src.cols << "x" << src.rows << std::endl;
 
-            // resize the image. this still needs some work...
+            // resize the image.
             uint d_rows = src.rows, d_cols = src.cols;
-            if (src.rows > src.cols) {
-                float scale = (float) cols / src.cols;
+            float col_scale = (float) cols / src.cols;
+            float row_scale = (float) rows / src.rows;
+
+            if (src.cols * row_scale > cols) {
                 d_cols = cols;
-                d_rows = (uint) (src.rows * scale);
+                d_rows = (uint) (src.rows * col_scale);
+                std::cout << "Scaled up cols:\t" << col_scale << std::endl;
             } else {
-                float scale = (float) rows / src.rows;
                 d_rows = rows;
-                d_cols = (uint) (src.cols * scale);
+                d_cols = (uint) (src.cols * row_scale);
+                std::cout << "Scaled up rows:\t" << row_scale << std::endl;
             }
+
             std::cout << "Displayed image size is:\t" << d_cols << "x" << d_rows << std::endl;
             cv::namedWindow(*it, cv::WINDOW_NORMAL);
             cv::resizeWindow(*it, d_cols, d_rows);
@@ -112,7 +114,7 @@ parse_arguments(int argc, const char** argv, std::string* input_dir_path, uint* 
 
     if (parser.has("h")) {
         parser.printMessage();
-        return 1;
+        return 0;
     }
 
     try {
@@ -126,7 +128,7 @@ parse_arguments(int argc, const char** argv, std::string* input_dir_path, uint* 
         *rows = (uint) parser.get<uint>("r") ? parser.get<uint>("r") : 1080;
         *cols = (uint) parser.get<uint>("c") ? parser.get<uint>("c") : 1920;
     } catch(...) {
-        std::cerr << "Failed to parse size argument!:" << std::endl;
+        std::cerr << "Failed to parse size argument." << std::endl;
         return -1;
     }
 
@@ -143,7 +145,7 @@ parse_arguments(int argc, const char** argv, std::string* input_dir_path, uint* 
         std::cerr << "Dimensions too large. Max 1920x1080" << std::endl;
         return -1;
     }
-    return 0;
+    return 1;
 }
 
 // Wrapper for open_dir, returns vector of strings (filenames)
