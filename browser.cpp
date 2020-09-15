@@ -12,6 +12,7 @@
 #include <dirent.h>
 
 
+void display_images(std::vector<std::string> file_paths, uint rows, uint cols);
 int parse_arguments(const int argc, const char** argv, std::string* input_dir_path, uint* rows, uint* cols);
 std::vector<std::string> open_dir(const char* dir_string);
 void open_dir(const std::string dir_string, const std::string line_prefix, std::vector<std::string>* file_paths);
@@ -33,24 +34,68 @@ main(int argc, const char** argv)
 
     std::vector<std::string> file_paths = open_dir(input_dir_path.c_str());
 
-    std::cout << std::endl << "Filename list:" << std::endl;
-    for (std::vector<std::string>::iterator it = file_paths.begin(); it != file_paths.end(); ++it) {
-        // std::cout << ' ' << *it << std::endl;
+    display_images(file_paths, rows, cols);
+	return 0;
+}
+
+// display the images
+void
+display_images(std::vector<std::string> file_paths, uint rows, uint cols)
+{
+    std::vector<std::string>::iterator it = file_paths.begin();
+    while (true) {
+        std::cout << std::endl << "File info:" << std::endl;
+        std::cout << ' ' << *it << std::endl;
         try {
-            cv::Mat image = cv::imread(*it);
-            if (image.empty()) {
+            cv::Mat src = cv::imread(*it);
+            if (src.empty()) {
                 std::cerr << "Cannot open input image: " + *it << std::endl;
+                it = file_paths.erase(it);
                 continue;
             }
-            cv::imshow(*it, image);
-            cv::waitKey(0);
+            std::cout << "Image size is:\t\t\t" << src.cols << "x" << src.rows << std::endl;
+
+            // resize the image. this still needs some work...
+            uint d_rows = src.rows, d_cols = src.cols;
+            if (src.rows > src.cols) {
+                float scale = (float) cols / src.cols;
+                d_cols = cols;
+                d_rows = (uint) (src.rows * scale);
+            } else {
+                float scale = (float) rows / src.rows;
+                d_rows = rows;
+                d_cols = (uint) (src.cols * scale);
+            }
+            std::cout << "Displayed image size is:\t" << d_cols << "x" << d_rows << std::endl;
+            cv::namedWindow(*it, cv::WINDOW_NORMAL);
+            cv::resizeWindow(*it, d_cols, d_rows);
+            cv::imshow(*it, src);
+
+            while (char key_pressed = cv::waitKey(0) & 255) {
+                // pressing escape quits out
+                if (key_pressed == 27 || key_pressed == 'q') {
+                    cv::destroyAllWindows();
+                    return;
+                }
+                if (key_pressed == 'n' || key_pressed == ' ') {
+                    cv::destroyWindow(*it);
+                    if (++it == file_paths.end()) --it;
+                    break;
+                }
+                if (key_pressed == 'p') {
+                    cv::destroyWindow(*it);
+                    if (it != file_paths.begin()) --it;
+                    break;
+                }
+            }
         } catch (std::string& str) {
             std::cerr << "Error: " << *it << ": " << str << std::endl;
+            return;
         } catch (cv::Exception& e) {
             std::cerr << "Error: " << *it << ": " << e.msg << std::endl;
+            return;
         }
     }
-	return 0;
 }
 
 // parse command line arguments
@@ -90,6 +135,10 @@ parse_arguments(int argc, const char** argv, std::string* input_dir_path, uint* 
         return -1;
     }
 
+    if (*rows == 0 || *cols == 0) {
+        std::cerr << "Dimensions cannot be zero." << std::endl;
+        return -1;
+    }
     if (*rows > 1080 || *cols > 1920) {
         std::cerr << "Dimensions too large. Max 1920x1080" << std::endl;
         return -1;
