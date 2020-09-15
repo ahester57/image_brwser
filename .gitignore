@@ -6,3 +6,4 @@ x64/
 *.sln
 *.exe
 .vscode/settings.json
+images/
