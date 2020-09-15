@@ -13,9 +13,9 @@
 
 
 int parse_arguments(const int argc, const char** argv, std::string* input_dir_path, uint* rows, uint* cols);
-void open_dir(const char* dir_string);
-void open_dir(const char* dir_string, const std::string line_prefix);
-int is_directory(const struct dirent* drnt);
+std::vector<std::string> open_dir(const char* dir_string);
+void open_dir(const char* dir_string, const std::string line_prefix, std::vector<std::string>* file_paths);
+int is_directory(const char* path);
 
 
 int
@@ -32,7 +32,11 @@ main(int argc, const char** argv)
 
 	std::cout << input_dir_path << std::endl;
 
-    open_dir(input_dir_path.c_str());
+    std::vector<std::string> file_paths = open_dir(input_dir_path.c_str());
+    std::cout << std::endl << "Filename list:" << std::endl;
+    for (std::vector<std::string>::iterator it = file_paths.begin(); it != file_paths.end(); ++it) {
+        std::cout << ' ' << *it << std::endl;
+    }
 	return 0;
 }
 
@@ -56,12 +60,17 @@ parse_arguments(int argc, const char** argv, std::string* input_dir_path, uint* 
     try {
         *input_dir_path = (std::string) parser.get<std::string>(0).c_str();
     } catch(...) {
-        std::cerr << "Failed to parse arguments!:" << std::endl;
+        std::cerr << "Failed to parse directory argument!:" << std::endl;
         return -1;
     }
 
-    *rows = (uint) parser.get<uint>("r") ? parser.get<uint>("r") : 1080;
-    *cols = (uint) parser.get<uint>("c") ? parser.get<uint>("c") : 1920;
+    try {
+        *rows = (uint) parser.get<uint>("r") ? parser.get<uint>("r") : 1080;
+        *cols = (uint) parser.get<uint>("c") ? parser.get<uint>("c") : 1920;
+    } catch(...) {
+        std::cerr << "Failed to parse size argument!:" << std::endl;
+        return -1;
+    }
 
     if (!parser.check()) {
         parser.printErrors();
@@ -76,19 +85,21 @@ parse_arguments(int argc, const char** argv, std::string* input_dir_path, uint* 
 }
 
 
-void
+std::vector<std::string>
 open_dir(const char* dir_string)
 {
-    open_dir(dir_string, " \n");
+    std::vector<std::string> file_paths;
+    open_dir(dir_string, " \n", &file_paths);
+    return file_paths;
 }
 
 
 void
-open_dir(const char* dir_string, const std::string line_prefix)
+open_dir(const char* dir_string, const std::string line_prefix, std::vector<std::string>* file_paths)
 {
     DIR *dr;
     try {
-        dr = opendir(dir_string); //open all directory
+        dr = opendir(dir_string); //open all directories
     } catch (...) {
         std::cerr << "Failed to open directory: [" << dir_string << "]" << std::endl;
         return;
@@ -104,11 +115,15 @@ open_dir(const char* dir_string, const std::string line_prefix)
             continue;
         }
         // check if is a directory
-        is_dir = is_directory(drnt);
-        std::cout << line_prefix << drnt->d_name << is_dir; //print all directory name
+        const std::string rel_path = (dir_string + std::string("/") + std::string(drnt->d_name));
+        // std::cout << std::endl << rel_path <<std::endl << rel_path.c_str();
+        is_dir = is_directory(rel_path.c_str());
+        std::cout << line_prefix << drnt->d_name << is_dir; //print all directory names
         if (is_dir) {
-            // open next directory
-            open_dir(drnt->d_name, line_prefix + "\t");
+            // open next directory, sorry for this line
+            open_dir(rel_path.c_str(), line_prefix + "\t", file_paths);
+        } else {
+            (*file_paths).push_back(rel_path);
         }
     }
     closedir(dr); //close the directory
@@ -116,15 +131,16 @@ open_dir(const char* dir_string, const std::string line_prefix)
 
 
 int
-is_directory(const struct dirent* drnt)
+is_directory(const char* path)
 {
-    // credit: https://stackoverflow.com/a/39430337
-    struct stat stbuf;
-    // stat follows symlinks, lstat doesn't.
-    try {
-        stat(drnt->d_name, &stbuf);
-        return S_ISDIR(stbuf.st_mode);
-    } catch (...) {
-        return false;
+    // cred: https://stackoverflow.com/a/146938
+    struct stat s;
+    if( stat(path, &s) == 0 )
+    {
+        if( s.st_mode & S_IFDIR )
+        {
+            return true;
+        }
     }
+    return false;
 }
